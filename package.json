@@ -1,0 +1,21 @@
+{
+  "name": "airtable-monitor",
+  "version": "1.0.0",
+  "description": "Get notified when an Airtable record is edited",
+  "main": "AirtableMonitor.js",
+  "repository": "git@github.com:AirIntServices/airtable-monitor.git",
+  "author": "dlajarretie <dlajarretie@airintservices.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "airtable-plus": "^1.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^6.6.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "1.18.2"
+  }
+}
