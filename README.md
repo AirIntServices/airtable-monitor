@@ -8,7 +8,7 @@ This library polls your Airtable tables to monitor changes, calling a simple eve
 
 ## Usage
 
-```
+```js
 const AirtableMonitor = require('airtable-monitor');
 
 const monitor = new AirtableMonitor(
