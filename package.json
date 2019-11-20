@@ -12,6 +12,7 @@
     "fast-deep-equal": "^2.0.1"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
     "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-prettier": "^6.5.0",
@@ -22,6 +23,7 @@
     "rollup": "^1.27.2"
   },
   "scripts": {
-    "build": "rollup --config"
+    "build": "rollup --config",
+    "test": "rollup --config rollup.tests.config.js && mocha"
   }
 }

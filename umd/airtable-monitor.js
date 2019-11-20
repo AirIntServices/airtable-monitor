@@ -47,19 +47,12 @@
     if (Array.isArray(a) && Array.isArray(b)) {
       if (a.length !== b.length) return false;
       if (a.length + b.length === 0) return true; // Both arrays are empty (length can't be negative)
-      // Comparison for arrays of strings
-      if (typeof a[0] === 'string') {
-        return a.every(e => b.includes(e));
-      }
       // Comparison for arrays of objects (i.e. attachments)
       if (typeof a[0] === 'object') {
         return a.every((e, index) => deepEqual(e, b[index]));
       }
-      // Unknown type : return true to avoid endless notifications
-      console.error(
-        `Unsupported Airtable type : Array of ${typeof a[0]} ; Ignoring field.`,
-      );
-      return true;
+      // For all other types, check if both arrays contain the same items
+      return a.every(e => b.includes(e));
     }
     // Object type fields : barcode, collaborator
     if (a && b && typeof a === 'object') {

@@ -1,4 +1,10 @@
-import deepEqual from 'fast-deep-equal';
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var deepEqual = _interopDefault(require('fast-deep-equal'));
 
 /**
  * Comparison function, handling the following Airtable field types :
@@ -30,7 +36,7 @@ import deepEqual from 'fast-deep-equal';
  * @param {*} a left comparison operand
  * @param {*} b right comparison operand
  */
-export const airtableFieldValuesAreEqual = (a, b) => {
+const airtableFieldValuesAreEqual = (a, b) => {
   // If one of the values is falsy and not the other, they're not equal
   if ((!a && b) || (!b && a)) return false;
   // If they are not of the same type, they're not equal
@@ -54,3 +60,5 @@ export const airtableFieldValuesAreEqual = (a, b) => {
   // Behaves as a simple === for non-arrays
   return a === b;
 };
+
+exports.airtableFieldValuesAreEqual = airtableFieldValuesAreEqual;
