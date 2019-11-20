@@ -70,12 +70,27 @@ export default class AirTableMonitor {
     // Fetch all the records from the table
     const records = await this.airtable.read(tableName);
     records.forEach((record, index) => {
+      if (!this.previousValues[tableName][index]) {
+        this.previousValues[tableName][index] = {};
+      }
+      // For each record, build the list of fields to be checked for change
+      // We need to watch both the previous values and the current record
+      // This is due to Airtable API design only returning non-blank fields
+      // If a field became blank, it won't appear in the record but we still need to fire the event
+      const fields = [];
+      if (this.previousValues[tableName][index]) {
+        Object.keys(this.previousValues[tableName][index]).forEach(field => {
+          if (!fields.includes(field)) fields.push(field);
+        });
+      }
+      Object.keys(record.fields).forEach(field => {
+        if (!fields.includes(field)) fields.push(field);
+      });
+
       // For each field of each record, compare the current value to the previous value
-      Object.keys(record.fields).forEach(fieldName => {
+      fields.forEach(fieldName => {
         const newValue = record.fields[fieldName];
-        if (!this.previousValues[tableName][index]) {
-          this.previousValues[tableName][index] = {};
-        }
+
         if (firstPass) {
           // First time we fetch the values, all the previous values will be undefined
           // We don't want to fire events in that case, so just store the current values
@@ -86,6 +101,7 @@ export default class AirTableMonitor {
         if (!airtableFieldValuesAreEqual(newValue, previousValue)) {
           // There was a change in value, so fire the event handler
           this.onUpdate({
+            date: new Date().toISOString(),
             tableName,
             fieldName,
             previousValue,
