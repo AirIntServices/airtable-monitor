@@ -33,8 +33,8 @@ var deepEqual = _interopDefault(require('fast-deep-equal'));
  * - collaborator
  * - formula
  * - rollup
- * @param {*} a left comparison operand
- * @param {*} b right comparison operand
+ * @param {*} a - Left comparison operand.
+ * @param {*} b - Right comparison operand.
  */
 const airtableFieldValuesAreEqual = (a, b) => {
   // If one of the values is falsy and not the other, they're not equal
@@ -61,4 +61,24 @@ const airtableFieldValuesAreEqual = (a, b) => {
   return a === b;
 };
 
+/**
+ * Sequentially performs an async function on every item of an array.
+ * @param {Array} inputArray - The input array.
+ * @param {function} func - Async function that will be executed for each element in the input array.
+ */
+const chainPromises = (inputArray, func) =>
+  inputArray.reduce(
+    (promise, item) => promise.then(() => func(item)),
+    Promise.resolve(),
+  );
+
+/**
+ * Returns a promise that will resolve after the given delay.
+ * @param {number} delay - The number of milliseconds to wait for.
+ */
+const waitFor = delay =>
+  new Promise(resolve => setTimeout(resolve, delay));
+
 exports.airtableFieldValuesAreEqual = airtableFieldValuesAreEqual;
+exports.chainPromises = chainPromises;
+exports.waitFor = waitFor;

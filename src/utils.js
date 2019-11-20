@@ -27,8 +27,8 @@ import deepEqual from 'fast-deep-equal';
  * - collaborator
  * - formula
  * - rollup
- * @param {*} a left comparison operand
- * @param {*} b right comparison operand
+ * @param {*} a - Left comparison operand.
+ * @param {*} b - Right comparison operand.
  */
 export const airtableFieldValuesAreEqual = (a, b) => {
   // If one of the values is falsy and not the other, they're not equal
@@ -54,3 +54,21 @@ export const airtableFieldValuesAreEqual = (a, b) => {
   // Behaves as a simple === for non-arrays
   return a === b;
 };
+
+/**
+ * Sequentially performs an async function on every item of an array.
+ * @param {Array} inputArray - The input array.
+ * @param {function} func - Async function that will be executed for each element in the input array.
+ */
+export const chainPromises = (inputArray, func) =>
+  inputArray.reduce(
+    (promise, item) => promise.then(() => func(item)),
+    Promise.resolve(),
+  );
+
+/**
+ * Returns a promise that will resolve after the given delay.
+ * @param {number} delay - The number of milliseconds to wait for.
+ */
+export const waitFor = delay =>
+  new Promise(resolve => setTimeout(resolve, delay));
