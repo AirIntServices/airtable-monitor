@@ -1,19 +1,7 @@
-const AirtablePlus = require('airtable-plus');
+import AirtablePlus from 'airtable-plus';
+import { airtableFieldValuesAreEqual } from './utils';
 
-/**
- * Comparison function used to handle fields that are linked to multiple records (arrays)
- * Behaves as a simple === for non-arrays
- * @param {*} a left comparison operand
- * @param {*} b right comparison operand
- */
-const valuesAreEqual = (a, b) => {
-  if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every(e => b.includes(e));
-  }
-  return a === b;
-};
-
-class AirTableMonitor {
+export default class AirTableMonitor {
   constructor(options = {}, onUpdate = () => {}) {
     if (!options.tables || options.tables.length === 0) {
       throw new Error('Please specify at least one table to monitor.');
@@ -73,8 +61,7 @@ class AirTableMonitor {
    * Called automatically by checkForUpdates() at a fixed interval when start() has been called.
    */
   async checkUpdatesForTable(tableName) {
-    // First time we fetch the values, all the previous values will be undefined
-    // We don't want to fire events in that case
+    // Boolean telling if we are checking this table for the first time
     let firstPass = false;
     if (!this.previousValues[tableName]) {
       this.previousValues[tableName] = [];
@@ -89,15 +76,15 @@ class AirTableMonitor {
         if (!this.previousValues[tableName][index]) {
           this.previousValues[tableName][index] = {};
         }
-        const previousValue = this.previousValues[tableName][index][fieldName];
-        if (!previousValue) {
+        if (firstPass) {
+          // First time we fetch the values, all the previous values will be undefined
+          // We don't want to fire events in that case, so just store the current values
           this.previousValues[tableName][index][fieldName] = newValue;
-        } else if (
-          previousValue &&
-          !valuesAreEqual(newValue, previousValue) &&
-          !firstPass
-        ) {
-          // There was a change in value and this isn't the first pass, so fire the event handler
+          return;
+        }
+        const previousValue = this.previousValues[tableName][index][fieldName];
+        if (!airtableFieldValuesAreEqual(newValue, previousValue)) {
+          // There was a change in value, so fire the event handler
           this.onUpdate({
             tableName,
             fieldName,
@@ -112,5 +99,3 @@ class AirTableMonitor {
     });
   }
 }
-
-module.exports = AirTableMonitor;
