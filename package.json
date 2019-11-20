@@ -2,7 +2,7 @@
   "name": "airtable-monitor",
   "version": "1.0.1",
   "description": "Get notified when an Airtable record is edited",
-  "main": "umd/airtable-monitor.js",
+  "main": "build/umd/airtable-monitor.js",
   "repository": "git@github.com:AirIntServices/airtable-monitor.git",
   "author": "dlajarretie <dlajarretie@airintservices.com>",
   "license": "MIT",

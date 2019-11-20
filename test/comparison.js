@@ -1,5 +1,5 @@
 const { expect } = require('chai');
-const { airtableFieldValuesAreEqual } = require('../cjs/utils');
+const { airtableFieldValuesAreEqual } = require('../build/cjs/utils');
 
 describe('airtableFieldValuesAreEqual', () => {
   describe('Text fields', () => {
