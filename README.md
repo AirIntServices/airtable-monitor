@@ -16,10 +16,12 @@ const monitor = new AirtableMonitor(
     baseID: xxx, // Airtable base ID
     apiKey: xxx, // Airtable API token
     tables: ['table_to_monitor'],
+    tableInterval: 1, // Optional (default = 0) : an interval in seconds between calls to Airtable API for each table of a tick to avoid rate limiting.
   },
   event => {
     // event structure :
     // {
+    //   date,
     //   tableName,
     //   fieldName,
     //   previousValue,
@@ -41,4 +43,3 @@ monitor.start(30); // Poll every 30 seconds. Default : 60 seconds
 ## Running tests
 
 `yarn install && yarn test`
-
