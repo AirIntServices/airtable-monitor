@@ -1,15 +1,65 @@
 const AirtablePlus = require('airtable-plus');
+const deepEqual = require('fast-deep-equal');
 
 /**
- * Comparison function used to handle fields that are linked to multiple records (arrays)
- * Behaves as a simple === for non-arrays
+ * Comparison function, handling the following Airtable field types :
+ * - link to multiple records
+ * - link to single record
+ * - lookup
+ * - single select
+ * - multiple select
+ * - date
+ * - duration
+ * - phone
+ * - email
+ * - url
+ * - number
+ * - currency
+ * - percent
+ * - count
+ * - rating
+ * - single line text
+ * - long text
+ * - created time
+ * - last modified time
+ * - checkbox
+ * - barcode
+ * - attachments
+ * - collaborator
+ * - formula
+ * - rollup
  * @param {*} a left comparison operand
  * @param {*} b right comparison operand
  */
 const valuesAreEqual = (a, b) => {
+  // If one of the values is falsy and not the other, they're not equal
+  if ((!a && b) || (!b && a)) return false;
+  // If they are not of the same type, they're not equal
+  // This can happen if a field type changed since the last check
+  if (typeof a !== typeof b) return false;
+  // Array type fields : link to other records, lookup, multiple select, attachments
   if (Array.isArray(a) && Array.isArray(b)) {
-    return a.length === b.length && a.every(e => b.includes(e));
+    if (a.length !== b.length) return false;
+    if (a.length + b.length === 0) return true; // Both arrays are empty (length can't be negative)
+    // Comparison for arrays of strings
+    if (typeof a[0] === 'string') {
+      return a.every(e => b.includes(e));
+    }
+    // Comparison for arrays of objects (i.e. attachments)
+    if (typeof a[0] === 'object') {
+      return a.every((e, index) => deepEqual(e, b[index]));
+    }
+    // Unknown type : return true to avoid endless notifications
+    console.error(
+      `Unsupported Airtable type : Array of ${typeof a[0]} ; Ignoring field.`,
+    );
+    return true;
   }
+  // Object type fields : barcode, collaborator
+  if (a && b && typeof a === 'object') {
+    return deepEqual(a, b);
+  }
+  // Behaves as a simple === for non-arrays
   return a === b;
 };
 
@@ -73,8 +123,7 @@ class AirTableMonitor {
    * Called automatically by checkForUpdates() at a fixed interval when start() has been called.
    */
   async checkUpdatesForTable(tableName) {
-    // First time we fetch the values, all the previous values will be undefined
-    // We don't want to fire events in that case
+    // Boolean telling if we are checking this table for the first time
     let firstPass = false;
     if (!this.previousValues[tableName]) {
       this.previousValues[tableName] = [];
@@ -89,15 +138,15 @@ class AirTableMonitor {
         if (!this.previousValues[tableName][index]) {
           this.previousValues[tableName][index] = {};
         }
-        const previousValue = this.previousValues[tableName][index][fieldName];
-        if (!previousValue) {
+        if (firstPass) {
+          // First time we fetch the values, all the previous values will be undefined
+          // We don't want to fire events in that case, so just store the current values
           this.previousValues[tableName][index][fieldName] = newValue;
-        } else if (
-          previousValue &&
-          !valuesAreEqual(newValue, previousValue) &&
-          !firstPass
-        ) {
-          // There was a change in value and this isn't the first pass, so fire the event handler
+          return;
+        }
+        const previousValue = this.previousValues[tableName][index][fieldName];
+        if (!valuesAreEqual(newValue, previousValue)) {
+          // There was a change in value, so fire the event handler
           this.onUpdate({
             tableName,
             fieldName,

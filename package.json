@@ -8,7 +8,8 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "airtable-plus": "^1.0.4"
+    "airtable-plus": "^1.0.4",
+    "fast-deep-equal": "^2.0.1"
   },
   "devDependencies": {
     "eslint": "^6.6.0",
@@ -16,6 +17,7 @@
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-prettier": "^3.1.1",
+    "mocha": "^6.2.2",
     "prettier": "1.18.2"
   }
 }
