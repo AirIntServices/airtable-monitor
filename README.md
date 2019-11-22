@@ -1,4 +1,5 @@
 # airtable-monitor
+![npm](https://img.shields.io/npm/v/airtable-monitor) ![npm](https://img.shields.io/npm/dm/airtable-monitor)
 
 This library polls your Airtable tables to monitor changes, calling a simple event handler when a change is detected.
 
