@@ -1,6 +1,6 @@
 {
   "name": "airtable-monitor",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Get notified when an Airtable record is edited",
   "main": "build/umd/airtable-monitor.js",
   "types": "build/umd/airtable-monitor.d.ts",
