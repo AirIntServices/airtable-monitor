@@ -30,6 +30,7 @@
   "scripts": {
     "compile": "tsc",
     "build": "tsc && rollup --config && cp build/js/AirtableMonitor.d.ts build/umd/airtable-monitor.d.ts",
-    "test": "rollup --config rollup.tests.config.js && mocha"
+    "test": "rollup --config rollup.tests.config.js && mocha",
+    "prepublish": "yarn test && yarn build"
   }
 }
