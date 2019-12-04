@@ -30,7 +30,7 @@ import deepEqual from 'fast-deep-equal';
  * @param {*} a - Left comparison operand.
  * @param {*} b - Right comparison operand.
  */
-export const airtableFieldValuesAreEqual = (a, b) => {
+export const airtableFieldValuesAreEqual = (a: any, b: any): boolean => {
   // If one of the values is falsy and not the other, they're not equal
   if ((!a && b) || (!b && a)) return false;
   // If they are not of the same type, they're not equal
@@ -60,7 +60,10 @@ export const airtableFieldValuesAreEqual = (a, b) => {
  * @param {Array} inputArray - The input array.
  * @param {function} func - Async function that will be executed for each element in the input array.
  */
-export const chainPromises = (inputArray, func) =>
+export const chainPromises = (
+  inputArray: Array<any>,
+  func: (arg: any) => Promise<any>,
+): Promise<any> =>
   inputArray.reduce(
     (promise, item) => promise.then(() => func(item)),
     Promise.resolve(),
@@ -70,5 +73,5 @@ export const chainPromises = (inputArray, func) =>
  * Returns a promise that will resolve after the given delay.
  * @param {number} delay - The number of milliseconds to wait for.
  */
-export const waitFor = delay =>
+export const waitFor = (delay: number): Promise<void> =>
   new Promise(resolve => setTimeout(resolve, delay));
