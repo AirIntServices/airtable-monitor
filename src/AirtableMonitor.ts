@@ -1,14 +1,46 @@
 import AirtablePlus from 'airtable-plus';
 import { airtableFieldValuesAreEqual, chainPromises, waitFor } from './utils';
 
+export interface AirtableMonitorOptions {
+  tables: Array<string>;
+  baseID: string;
+  apiKey: string;
+  tableInterval: number;
+}
+
+export interface AirtableMonitorEvent {
+  date: Date;
+  tableName: string;
+  fieldName: string;
+  previousValue: any;
+  newValue: any;
+  recordId: string;
+}
+
+export interface AirtableMonitorValueStore {
+  [tableName: string]: {
+    [recordId: string]: {
+      [fieldName: string]: any;
+    };
+  };
+}
+
 export default class AirTableMonitor {
+  private options: AirtableMonitorOptions;
+  private airtable: any; // TODO : properly declare airtable-plus types
+  private previousValues: AirtableMonitorValueStore;
+  private onUpdate: (AirtableMonitorEvent) => void;
+  private interval: any; // number in the browser, NodeJS.Timer in node.
   /**
    * Creates a monitor for one or more table(s) of a given base.
    * You still need to call start() in order to start watching for changes.
    * @param {Object} options - Config of the monitor. See the README for possible options.
    * @param {function} onUpdate - The event handler that will be called upon change.
    */
-  constructor(options = {}, onUpdate = () => {}) {
+  constructor(
+    options: AirtableMonitorOptions,
+    onUpdate: (AirtableMonitorEvent) => void = () => {},
+  ) {
     if (!options.tables || options.tables.length === 0) {
       throw new Error('Please specify at least one table to monitor.');
     }
@@ -38,7 +70,7 @@ export default class AirTableMonitor {
    * Starts watching the airtable tables for changes.
    * @param {integer} intervalSeconds - Polling interval between each tick in seconds.
    */
-  start(intervalSeconds = 60) {
+  start(intervalSeconds: number = 60) {
     this.interval = setInterval(this.checkForUpdates, intervalSeconds * 1000);
     this.checkForUpdates();
   }
@@ -54,7 +86,7 @@ export default class AirTableMonitor {
    * Triggers a check for changes on every registered table.
    * Called automatically at a fixed interval when start() has been called.
    */
-  async checkForUpdates() {
+  private async checkForUpdates() {
     return chainPromises(this.options.tables, tableName => {
       return this.checkUpdatesForTable(tableName).then(() => {
         // If set in the options, wait before proceeding to the next table
@@ -71,7 +103,7 @@ export default class AirTableMonitor {
    * Called automatically by checkForUpdates() at a fixed interval when start() has been called.
    * @param {string} tableName - The name of the table to check for changes.
    */
-  async checkUpdatesForTable(tableName) {
+  private async checkUpdatesForTable(tableName: string) {
     // Boolean telling if we are checking this table for the first time
     let firstPass = false;
     if (!this.previousValues[tableName]) {
