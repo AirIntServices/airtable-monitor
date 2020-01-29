@@ -1,79 +1,27 @@
 import AirtablePlus from 'airtable-plus';
 import { airtableFieldValuesAreEqual, chainPromises, waitFor } from './utils';
+import {
+  Options,
+  ValueStore,
+  RecordEvent,
+  EventType,
+  FieldEvent,
+  LegacyEvent,
+} from './types';
 
-// Types
-
-interface AirtableMonitorOptions {
-  tables: Array<string>;
-  baseID: string;
-  apiKey: string;
-  tableInterval: number;
-  onEvent: (AirtableMonitorEvent) => void;
-}
-
-interface AirtableMonitorRecord {
-  id: string;
-  fields: { [fieldName: string]: any };
-}
-
-enum AirtableMonitorEventType {
-  Create = 'create',
-  Delete = 'delete',
-  Update = 'update',
-}
-
-interface AirtableMonitorEvent {
-  date: string; // ISO string
-  type: AirtableMonitorEventType;
-  tableName: string;
-}
-
-interface AirtableMonitorFieldEvent extends AirtableMonitorEvent {
-  recordId: string;
-  fieldName: string;
-  previousValue: any;
-  newValue: any;
-}
-
-interface AirtableMonitorRecordEvent extends AirtableMonitorEvent {
-  records: Array<AirtableMonitorRecord>;
-}
-
-interface AirtableMonitorValueStore {
-  [tableName: string]: {
-    [recordId: string]: {
-      [fieldName: string]: any;
-    };
-  };
-}
-
-// DEPRECATED
-// Please use AirtableMonitorEvent sub-interfaces.
-interface AirtableMonitorLegacyEvent {
-  date: string; // ISO string
-  tableName: string;
-  fieldName: string;
-  previousValue: any;
-  newValue: any;
-  recordId: string;
-}
-
-export default class AirTableMonitor {
-  private options: AirtableMonitorOptions;
+export default class AirtableMonitor {
+  private options: Options;
   private airtable: any; // TODO : properly declare airtable-plus types
-  private previousValues: AirtableMonitorValueStore;
-  private onUpdate: (AirtableMonitorLegacyEvent) => void; // DEPRECATED : Left here for backwards compatibility; please use options.onEvent().
-  private interval: any; // number in the browser, NodeJS.Timer in node.
+  private previousValues: ValueStore;
+  private onUpdate: (event: LegacyEvent) => void; // DEPRECATED : Left here for backwards compatibility; please use options.onEvent().
+  private interval: any; // type is number in the browser, NodeJS.Timer in node.
   /**
    * Creates a monitor for one or more table(s) of a given base.
    * You still need to call start() in order to start watching for changes.
    * @param {Object} options - Config of the monitor. See the README for possible options.
    * @param {function} onUpdate - The event handler that will be called upon change.
    */
-  constructor(
-    options: AirtableMonitorOptions,
-    onUpdate: (AirtableMonitorLegacyEvent) => void,
-  ) {
+  constructor(options: Options, onUpdate?: (event: LegacyEvent) => void) {
     if (!options.tables || options.tables.length === 0) {
       throw new Error('Please specify at least one table to monitor.');
     }
@@ -164,8 +112,8 @@ export default class AirTableMonitor {
       );
       if (createdRecords.length > 0) {
         // firing the event handler
-        const event: AirtableMonitorRecordEvent = {
-          type: AirtableMonitorEventType.Create,
+        const event: RecordEvent = {
+          type: EventType.Create,
           tableName,
           date: new Date().toISOString(),
           records: createdRecords,
@@ -181,8 +129,8 @@ export default class AirTableMonitor {
           fields: this.previousValues[tableName][deletedId],
         }));
         // firing the event handler
-        const event: AirtableMonitorRecordEvent = {
-          type: AirtableMonitorEventType.Delete,
+        const event: RecordEvent = {
+          type: EventType.Delete,
           tableName,
           date: new Date().toISOString(),
           records: deletedRecords,
@@ -237,8 +185,8 @@ export default class AirTableMonitor {
             });
 
           // firing the event handler
-          const event: AirtableMonitorFieldEvent = {
-            type: AirtableMonitorEventType.Update,
+          const event: FieldEvent = {
+            type: EventType.Update,
             recordId: record.id,
             date: new Date().toISOString(),
             tableName,

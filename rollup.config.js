@@ -1,5 +1,6 @@
-import typescript from '@rollup/plugin-typescript';
+import typescript from 'rollup-plugin-typescript2';
 import commonjs from 'rollup-plugin-commonjs';
+
 export default [
   {
     input: 'src/AirtableMonitor.ts',
@@ -8,7 +9,8 @@ export default [
       format: 'umd',
       name: 'airtable-monitor',
     },
-    plugins: [typescript(), commonjs()],
+    // eslint-disable-next-line global-require
+    plugins: [typescript({ typescript: require('typescript') }), commonjs()],
   },
   // This builds a CJS module for utils in order to test it with mocha
   {
@@ -18,6 +20,7 @@ export default [
       format: 'cjs',
       name: 'utils',
     },
-    plugins: [typescript(), commonjs()],
+    // eslint-disable-next-line global-require
+    plugins: [typescript({ typescript: require('typescript') }), commonjs()],
   },
 ];
