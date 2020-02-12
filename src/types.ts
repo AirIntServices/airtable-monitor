@@ -4,7 +4,7 @@ export interface Options {
   tables: Array<string>;
   baseID: string;
   apiKey: string;
-  tableInterval: number;
+  tableInterval?: number;
   onEvent: (event: Event) => void;
 }
 

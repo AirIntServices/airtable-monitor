@@ -49,7 +49,7 @@ declare namespace AirtableMonitor {
     tables: Array<string>;
     baseID: string;
     apiKey: string;
-    tableInterval: number;
+    tableInterval?: number;
     onEvent: (event: Event) => void;
   }
 
