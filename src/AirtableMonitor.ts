@@ -1,46 +1,27 @@
 import AirtablePlus from 'airtable-plus';
 import { airtableFieldValuesAreEqual, chainPromises, waitFor } from './utils';
+import {
+  Options,
+  ValueStore,
+  RecordEvent,
+  EventType,
+  FieldEvent,
+  LegacyEvent,
+} from './types';
 
-export interface AirtableMonitorOptions {
-  tables: Array<string>;
-  baseID: string;
-  apiKey: string;
-  tableInterval: number;
-}
-
-export interface AirtableMonitorEvent {
-  date: Date;
-  tableName: string;
-  fieldName: string;
-  previousValue: any;
-  newValue: any;
-  recordId: string;
-}
-
-export interface AirtableMonitorValueStore {
-  [tableName: string]: {
-    [recordId: string]: {
-      [fieldName: string]: any;
-    };
-  };
-}
-
-export default class AirTableMonitor {
-  private options: AirtableMonitorOptions;
+export default class AirtableMonitor {
+  private options: Options;
   private airtable: any; // TODO : properly declare airtable-plus types
-  private previousValues: AirtableMonitorValueStore;
-  private onUpdate: (AirtableMonitorEvent) => void;
-  private interval: any; // number in the browser, NodeJS.Timer in node.
+  private previousValues: ValueStore;
+  private onUpdate: (event: LegacyEvent) => void; // DEPRECATED : Left here for backwards compatibility; please use options.onEvent().
+  private interval: any; // type is number in the browser, NodeJS.Timer in node.
   /**
    * Creates a monitor for one or more table(s) of a given base.
    * You still need to call start() in order to start watching for changes.
    * @param {Object} options - Config of the monitor. See the README for possible options.
    * @param {function} onUpdate - The event handler that will be called upon change.
    */
-  constructor(
-    options: AirtableMonitorOptions,
-    onUpdate: (AirtableMonitorEvent) => void = () => {},
-  ) {
+  constructor(options: Options, onUpdate?: (event: LegacyEvent) => void) {
     if (!options.tables || options.tables.length === 0) {
       throw new Error('Please specify at least one table to monitor.');
     }
@@ -49,8 +30,16 @@ export default class AirTableMonitor {
         'Please specify an Airtable Base ID and an Airtable API key.',
       );
     }
+    if (options.onEvent && typeof options.onEvent !== 'function') {
+      throw new Error('The onEvent event handler should be a function.');
+    }
     this.options = options;
-    if (!onUpdate || typeof onUpdate !== 'function') {
+    if (onUpdate) {
+      console.warn(
+        '[DEPRECATION WARNING] airtable-monitor : The onUpdate() event handler has been deprecated and will be removed in a later version. Please use options.onEvent() instead.',
+      );
+    }
+    if (onUpdate && typeof onUpdate !== 'function') {
       throw new Error('The onUpdate event handler should be a function.');
     }
     this.airtable = new AirtablePlus({
@@ -112,6 +101,47 @@ export default class AirTableMonitor {
     }
     // Fetch all the records from the table
     const records = await this.airtable.read(tableName);
+
+    if (!firstPass) {
+      // Check if the list of record ids changed since last pass
+      const currentRecordIds = records.map(record => record.id);
+      const previousRecordIds = Object.keys(this.previousValues[tableName]);
+      // Find out if some records were created or deleted and fire appropriate event(s)
+      const createdRecords = records.filter(
+        record => !previousRecordIds.includes(record.id),
+      );
+      if (createdRecords.length > 0) {
+        // firing the event handler
+        const event: RecordEvent = {
+          type: EventType.Create,
+          tableName,
+          date: new Date().toISOString(),
+          records: createdRecords,
+        };
+        if (this.options.onEvent) this.options.onEvent(event);
+      }
+      const deletedRecordIds = previousRecordIds.filter(
+        recordId => !currentRecordIds.includes(recordId),
+      );
+      if (deletedRecordIds.length > 0) {
+        const deletedRecords = deletedRecordIds.map(deletedId => ({
+          id: deletedId,
+          fields: this.previousValues[tableName][deletedId],
+        }));
+        // firing the event handler
+        const event: RecordEvent = {
+          type: EventType.Delete,
+          tableName,
+          date: new Date().toISOString(),
+          records: deletedRecords,
+        };
+        if (this.options.onEvent) this.options.onEvent(event);
+        for (let deletedId of deletedRecordIds) {
+          delete this.previousValues[tableName][deletedId];
+        }
+      }
+    }
+
     records.forEach(record => {
       const index = record.id;
       if (!this.previousValues[tableName][index]) {
@@ -143,15 +173,28 @@ export default class AirTableMonitor {
         }
         const previousValue = this.previousValues[tableName][index][fieldName];
         if (!airtableFieldValuesAreEqual(newValue, previousValue)) {
-          // There was a change in value, so fire the event handler
-          this.onUpdate({
+          // firing the deprecated onUpdate event handler for backwards compatibility
+          if (this.onUpdate)
+            this.onUpdate({
+              date: new Date().toISOString(),
+              tableName,
+              fieldName,
+              previousValue,
+              newValue,
+              recordId: record.id,
+            });
+
+          // firing the event handler
+          const event: FieldEvent = {
+            type: EventType.Update,
+            recordId: record.id,
             date: new Date().toISOString(),
             tableName,
             fieldName,
             previousValue,
             newValue,
-            recordId: record.id,
-          });
+          };
+          if (this.options.onEvent) this.options.onEvent(event);
           // And store the updated value
           this.previousValues[tableName][index][fieldName] = newValue;
         }

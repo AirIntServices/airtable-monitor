@@ -3,7 +3,7 @@
   "version": "1.2.1",
   "description": "Get notified when an Airtable record is edited",
   "main": "build/umd/airtable-monitor.js",
-  "types": "build/umd/airtable-monitor.d.ts",
+  "types": "index.d.ts",
   "repository": "git@github.com:AirIntServices/airtable-monitor.git",
   "author": "dlajarretie <dlajarretie@airintservices.com>",
   "license": "MIT",
@@ -13,6 +13,7 @@
     "fast-deep-equal": "^2.0.1"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^6.0.0",
     "@rollup/plugin-typescript": "^2.0.0",
     "chai": "^4.2.0",
     "eslint": "^6.6.0",
@@ -24,12 +25,14 @@
     "prettier": "1.18.2",
     "rollup": "^1.27.2",
     "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-typescript2": "^0.25.3",
     "rollup-pluginutils": "^2.8.2",
     "typescript": "^3.7.3"
   },
   "scripts": {
     "compile": "tsc",
-    "build": "tsc && rollup --config && cp build/js/AirtableMonitor.d.ts build/umd/airtable-monitor.d.ts",
-    "test": "rollup --config rollup.tests.config.js && mocha"
+    "build": "rollup --config",
+    "test": "rollup --config rollup.config.tests.js && mocha",
+    "prepublish": "yarn test && yarn build"
   }
 }
